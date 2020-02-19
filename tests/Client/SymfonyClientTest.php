@@ -16,6 +16,7 @@ namespace iCom\SolrClient\Tests\Client;
 use iCom\SolrClient\Client\SymfonyClient;
 use iCom\SolrClient\Query\Collapse;
 use iCom\SolrClient\Query\SelectQuery;
+use iCom\SolrClient\Query\Terms;
 use iCom\SolrClient\Query\UpdateQuery;
 use iCom\SolrClient\SolrClient;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -187,9 +188,20 @@ final class SymfonyClientTest extends TestCase
             'query' => static function (): SelectQuery {
                 return SelectQuery::create()
                     ->query('*:*')
-                    ->filter([(string) Collapse::create('sample_int')])
+                    ->filter([(string) Collapse::create('sample_int')->cache(false)])
                     ->fields(['id'])
                 ;
+            },
+            'expected' => [['id' => '1'], ['id' => '3']],
+        ];
+
+        yield 'it can search with terms query' => [
+            'query' => static function (): SelectQuery {
+                return SelectQuery::create()
+                    ->query('*:*')
+                    ->filter([(string) Terms::create('id', [1, 3])->separator('"')->cache(false)])
+                    ->fields(['id'])
+                    ;
             },
             'expected' => [['id' => '1'], ['id' => '3']],
         ];
