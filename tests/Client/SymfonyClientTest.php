@@ -27,6 +27,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @covers \iCom\SolrClient\Client\SymfonyClient
+ *
+ * @uses \iCom\SolrClient\JsonHelper
+ * @uses \iCom\SolrClient\Query\SelectQuery
+ * @uses \iCom\SolrClient\Query\Collapse
  */
 final class SymfonyClientTest extends TestCase
 {
