@@ -13,6 +13,15 @@ declare(strict_types=1);
 
 namespace iCom\SolrClient\Query;
 
+/**
+ * Uses the Terms Query Parser.
+ *
+ * May be more efficient in some cases than using
+ * the Standard Query Parser to generate a boolean
+ * query since the default implementation method avoids scoring.
+ *
+ * @see https://lucene.apache.org/solr/guide/8_4/other-parsers.html#term-query-parser
+ */
 final class Terms
 {
     private $params = [
@@ -26,15 +35,27 @@ final class Terms
 
     public function __construct(string $field, array $values)
     {
+        if ('' === $field) {
+            throw new \InvalidArgumentException('The "field" parameter can not be empty.');
+        }
+
+        if ([] === $values) {
+            throw new \InvalidArgumentException('The "values" parameter can not be empty.');
+        }
+
         $this->params['f'] = $field;
         $this->values = $values;
     }
 
     public function __toString(): string
     {
-        $separator = stripslashes($this->params['separator'] ?? '","');
+        $params = $this->params;
 
-        return sprintf('{!terms %s}%s', urldecode(http_build_query($this->params, '', ' ')), implode(substr($separator, 1, -1), $this->values));
+        if (null !== $params['separator']) {
+            $params['separator'] = sprintf('"%s"', addslashes($separator = $params['separator']));
+        }
+
+        return sprintf('{!terms %s}%s', urldecode(http_build_query($params, '', ' ')), implode($separator ?? ',', $this->values));
     }
 
     public static function create(string $field, array $values): self
@@ -45,7 +66,7 @@ final class Terms
     public function separator(string $separator): self
     {
         $terms = clone $this;
-        $terms->params['separator'] = sprintf('"%s"', addslashes($separator));
+        $terms->params['separator'] = $separator;
 
         return $terms;
     }
@@ -53,7 +74,7 @@ final class Terms
     public function method(string $method): self
     {
         if (!\in_array($method, $available = ['termsFilter', 'booleanQuery', 'automaton', 'docValuesTermsFilter'], true)) {
-            throw new \InvalidArgumentException(sprintf('Available methods: %s!', implode(',', $available)));
+            throw new \InvalidArgumentException(sprintf('Available methods are: "%s"', implode('", "', $available)));
         }
 
         $terms = clone $this;
